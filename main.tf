@@ -1,8 +1,3 @@
-/* Project on Terraform a mini lab.
-
-
-*/
-
 resource "aws_vpc" "mini_lab_vpc" {
   cidr_block = var.cidr_block[0]
 
