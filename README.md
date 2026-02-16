@@ -19,4 +19,6 @@ on port 443.
 
 6) validate the configuration.
 
-7) destroy the infrastructure.# mini_lab
+7) install packages like nginx
+
+8) destroy the infrastructure.# mini_lab
