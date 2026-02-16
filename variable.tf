@@ -1,20 +1,17 @@
-variable "cidr_block" {
-  description = "cidr block for vpc and subnet"
-  type = list
-}
-variable "name_tag" {
-  description = "names tag"
-  type = list
-}
-variable "avail_zone" {
-  description = "availability_zone"
-  type = string
-}
-variable "ami_id" {
-  description = "ec2 ami id"
-  type = string
-}
-variable "inst_type" {
-  description = "instance type"
-  type = string
-}
+variable "vpc_cidr_block" {}
+variable "subnet_cidr_block" {}
+variable "availability_zone" {}
+variable "ami_id" {}
+variable "instance_type" {}
+
+# user data
+variable "user_data" {}
+
+
+# resource name
+variable "vpc_name" {}
+variable "subnet_name" {}
+variable "sg_name" {}
+variable "igw_name" {}
+variable "rt_name" {}
+variable "instance_name" {}

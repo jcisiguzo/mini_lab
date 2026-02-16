@@ -1,83 +1,39 @@
-resource "aws_vpc" "mini_lab_vpc" {
-  cidr_block = var.cidr_block[0]
-
-  tags = {
-    Name = var.name_tag[0]
-  }
+module "vpc" {
+  source = "./module/vpc"
+  vpc_cidr_block = var.vpc_cidr_block
+  vpc_name = var.vpc_name
 }
-
-resource "aws_subnet" "public_subnet" {
-  vpc_id     = aws_vpc.mini_lab_vpc.id
-  availability_zone = var.avail_zone
-  cidr_block = var.cidr_block[1]
-
-  tags = {
-    Name = var.name_tag[1]
-  }
+module "subnet" {
+  source = "./module/subnet"
+  subnet_cidr_block = var.subnet_cidr_block
+  vpc_id = module.vpc.vpc_id
+  availability_zone = var.availability_zone
+  subnet_name = var.subnet_name
 }
-
-resource "aws_internet_gateway" "mini_lab_gw" {
-  vpc_id = aws_vpc.mini_lab_vpc.id
-
-  tags = {
-    Name = var.name_tag[2]
-  }
+module "sg" {
+  source = "./module/sg"
+  vpc_id = module.vpc.vpc_id
+  sg_name = var.sg_name
 }
-
-resource "aws_route_table" "mini_lab_rt" {
-  vpc_id = aws_vpc.mini_lab_vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.mini_lab_gw.id
-  }
-  tags = {
-    Name = var.name_tag[3]
-  }
+module "igw" {
+  source = "./module/igw"
+  vpc_id = module.vpc.vpc_id
+  igw_name = var.igw_name
 }
-
-resource "aws_route_table_association" "mini_lab_rta" {
-  subnet_id = aws_subnet.public_subnet.id
-  route_table_id = aws_route_table.mini_lab_rt.id
+module "rt" {
+  source = "./module/route_table"
+  vpc_id = module.vpc.vpc_id
+  igw_id = module.igw.igw_id
+  subnet_id = module.subnet.subnet_id
+  rt_name = var.rt_name
 }
-
-resource "aws_security_group" "allow_tls" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic and all outbound traffic"
-  vpc_id = aws_vpc.mini_lab_vpc.id
-
-  tags = {
-    Name = var.name_tag[4]
-  }
-}
-
-resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4" {
-  security_group_id = aws_security_group.allow_tls.id
-  cidr_ipv4         = aws_vpc.mini_lab_vpc.cidr_block
-  from_port         = 443
-  ip_protocol       = "tcp"
-  to_port           = 443
-}
-
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-  security_group_id = aws_security_group.allow_tls.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1"
-}
-
-resource "aws_instance" "ec2_mini_lab" {
-  ami           = var.ami_id
-  instance_type = var.inst_type
-  associate_public_ip_address = true
-  subnet_id = aws_subnet.public_subnet.id
-  vpc_security_group_ids = [ aws_security_group.allow_tls.id ]
-
-  tags = {
-    Name = var.name_tag[5]
-  }
-}
-
-output "mini_lab_out" {
-  value = aws_instance.ec2_mini_lab.public_ip
-  depends_on = [ aws_vpc_security_group_ingress_rule.allow_tls_ipv4 ]
+module "instance" {
+  source = "./module/ec2"
+  ami_id = var.ami_id
+  instance_type = var.instance_type
+  subnet_id = module.subnet.subnet_id
+  sg_id = module.sg.sg_id
+  availability_zone = var.availability_zone
+  instance_name = var.instance_name
+  user_data = var.user_data
 }
